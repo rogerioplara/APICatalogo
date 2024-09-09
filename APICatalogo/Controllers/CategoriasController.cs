@@ -1,9 +1,11 @@
-﻿using APICatalogo.Models;
+﻿using APICatalogo.Context;
+using APICatalogo.Models;
+using APICatalogo.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace APICatalogo.Context
+namespace APICatalogo.Controllers
 {
     [Route("[controller]")]
     [ApiController]
@@ -11,9 +13,23 @@ namespace APICatalogo.Context
     {
         private readonly AppDbContext _context;
 
-        public CategoriasController(AppDbContext context)
+        public CategoriasController(AppDbContext context, IMeuServico meuServico)
         {
             _context = context;
+        }
+
+        // Forma de utilizar o FromServices antes do .NET 7
+        [HttpGet("UsandoFromServices/{nome}")]
+        public ActionResult<string> GetSaudacaoFromServices([FromServices]IMeuServico meuServico, string nome)
+        {
+            return meuServico.Saudacao(nome);
+        }
+        
+        // Forma de utilizar o FromServices depois do .NET 7
+        [HttpGet("SemUsarFromServices/{nome}")]
+        public ActionResult<string> GetSaudacaoSemFromServices(IMeuServico meuServico, string nome)
+        {
+            return meuServico.Saudacao(nome);
         }
 
         [HttpGet("produtos")]
@@ -54,7 +70,7 @@ namespace APICatalogo.Context
                 {
                     return NotFound("Categoria não encontrada...");
                 }
-                
+
                 return Ok(categoria);
             }
             catch (Exception)
