@@ -1,4 +1,5 @@
 ﻿using APICatalogo.Context;
+using APICatalogo.Filters;
 using APICatalogo.Models;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Http;
@@ -12,19 +13,33 @@ namespace APICatalogo.Controllers
     public class CategoriasController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public CategoriasController(AppDbContext context, IMeuServico meuServico)
+        public CategoriasController(AppDbContext context, IMeuServico meuServico, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
+
+        [HttpGet("LerArquivoConfiguracao")]
+        public string GetValores()
+        {
+            var valor1 = _configuration["chave1"];
+            var valor2 = _configuration["chave2"];
+
+            var secao1 = _configuration["secao1:chave2"];
+
+            return $"chave1 = {valor1} \nchave2 = {valor2} \nseção1 => chave2 = {secao1}";
+        }
+
 
         // Forma de utilizar o FromServices antes do .NET 7
         [HttpGet("UsandoFromServices/{nome}")]
-        public ActionResult<string> GetSaudacaoFromServices([FromServices]IMeuServico meuServico, string nome)
+        public ActionResult<string> GetSaudacaoFromServices([FromServices] IMeuServico meuServico, string nome)
         {
             return meuServico.Saudacao(nome);
         }
-        
+
         // Forma de utilizar o FromServices depois do .NET 7
         [HttpGet("SemUsarFromServices/{nome}")]
         public ActionResult<string> GetSaudacaoSemFromServices(IMeuServico meuServico, string nome)
@@ -35,48 +50,34 @@ namespace APICatalogo.Controllers
         [HttpGet("produtos")]
         public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
         {
-            try
-            {
-                return _context.Categorias.AsNoTracking().Include(p => p.Produtos).Where(c => c.CategoriaId <= 5).ToList(); // exemplo
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar sua solicitação");
-            }
-            // return _context.Categorias.AsNoTracking().Include(p => p.Produtos).ToList();
+            return _context.Categorias.AsNoTracking().Include(p => p.Produtos).Where(c => c.CategoriaId <= 5).ToList(); // exemplo
+
         }
 
         [HttpGet]
+        [ServiceFilter(typeof(ApiLoggingFilter))]
         public ActionResult<IEnumerable<Categoria>> Get()
         {
-            try
-            {
-                return _context.Categorias.AsNoTracking().ToList();
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar sua solicitação");
-            }
+            return _context.Categorias.AsNoTracking().ToList();
         }
 
         [HttpGet("{id:int}", Name = "ObterCategoria")]
         public ActionResult<Categoria> Get(int id)
         {
-            try
-            {
-                var categoria = _context.Categorias.AsNoTracking().FirstOrDefault(c => c.CategoriaId == id);
+            // Teste do middleware
+            // throw new Exception("Exceção ao retornar a categoria pelo ID");
+            // string[] teste = null;
+            // if (teste.Length > 0) { }
 
-                if (categoria == null)
-                {
-                    return NotFound("Categoria não encontrada...");
-                }
 
-                return Ok(categoria);
-            }
-            catch (Exception)
+            var categoria = _context.Categorias.AsNoTracking().FirstOrDefault(c => c.CategoriaId == id);
+
+            if (categoria == null)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar sua solicitação");
+                return NotFound("Categoria não encontrada...");
             }
+
+            return Ok(categoria);
         }
 
         [HttpPost]
