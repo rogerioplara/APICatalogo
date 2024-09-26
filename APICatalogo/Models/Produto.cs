@@ -27,7 +27,7 @@ public class Produto : IValidatableObject
     public decimal Preco { get; set; }
 
     [Required]
-    [Url]
+    //[Url]
     [StringLength(300)]
     public string? ImagemUrl { get; set; }
     public float Estoque { get; set; }
