@@ -9,6 +9,8 @@ namespace APICatalogo.DTOs.Mappings
         {
             CreateMap<Produto, ProdutoDTO>().ReverseMap();
             CreateMap<Categoria, ProdutoDTO>().ReverseMap();
+            CreateMap<Produto, ProdutoDTOUpdateRequest>().ReverseMap();
+            CreateMap<Produto, ProdutoDTOUpdateResponse>().ReverseMap();
         }
     }
 }
